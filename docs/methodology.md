@@ -1,361 +1,811 @@
 # Methodology
 
-This document describes the analytical workflow used in the project.
+This document describes the final analytical workflow used in the Bachelor's Thesis.
 
-The methodology may be refined as the Bachelor's Thesis reaches its final version. Any methodological change affecting the published results will be documented in this repository.
+The public repository reorganises the original code into cleaner and more reproducible scripts, while preserving the main data-processing rules and statistical decisions used in the final project.
 
 ## 1. Research design
 
-The project follows an observational and exploratory approach based on administrative vehicle registration records.
+The project follows an observational, descriptive and exploratory design based on administrative passenger car registration records.
 
 The analysis combines:
 
+- Data import and integration.
 - Data cleaning and validation.
 - Descriptive statistics.
 - Territorial analysis.
-- Multivariate exploratory methods.
-- Unsupervised clustering.
-- Temporal analysis.
-- Statistical visualisation.
+- Factor Analysis of Mixed Data.
+- K-means cluster analysis.
+- Monthly time-series analysis.
+- Statistical and geographic visualisation.
 
-The objective is not only to describe registration volumes, but also to identify territorial, technological and structural patterns within the vehicle market of the Community of Madrid.
+The study describes associations and patterns within the registration data. It does not attempt to establish causal relationships.
 
-## 2. Data source
+## 2. Data source and study period
 
-The analysis uses vehicle registration microdata published by the Spanish Directorate-General for Traffic (`Dirección General de Tráfico`, DGT).
+The project uses monthly vehicle registration microdata published by the Spanish Directorate-General for Traffic (`Dirección General de Tráfico`, DGT).
 
-The study period covers registrations between 2014 and 2025.
-
-The working dataset contains approximately five million observations after the initial integration and filtering stages.
-
-The original source files are not included in this repository. They must be obtained separately from the official provider and stored in:
+The study covers:
 
 ```text
-data/raw/
+January 2015 to December 2025
 ```
 
-## 3. Geographic scope
+This represents:
 
-The analysis is restricted to vehicles registered in municipalities belonging to the Community of Madrid.
+- 132 monthly periods.
+- 11 complete calendar years.
+- 3,115,063 valid passenger car registrations after cleaning and filtering.
 
-Municipality names are cleaned and standardised before aggregation.
+The analysis focuses on new passenger car registrations associated with the Community of Madrid.
 
-Two territorial levels are considered:
+It does not analyse the complete vehicle fleet currently in circulation.
 
-1. Individual municipalities.
-2. A broader comparison between Madrid city and the surrounding municipalities.
+## 3. Original file structure
 
-The territorial classification is defined as:
+The original DGT files are monthly fixed-width text files.
 
-- **Madrid city:** `municipio_df == "Madrid"`.
-- **Surrounding municipalities:** all remaining municipalities in the Community of Madrid.
+Each file follows a layout containing 69 fields, including:
 
-This classification is used to study whether registration patterns differ between the regional capital and the rest of the region.
+- Registration information.
+- Vehicle type and class.
+- Technical characteristics.
+- Ownership information.
+- Administrative status.
+- Municipality and province.
+- Environmental information.
+- Electric-vehicle characteristics.
 
-## 4. Vehicle scope
+The public import script will contain the complete vector of field names and their corresponding fixed widths.
 
-The analytical sample is restricted to the vehicle classes and types relevant to the objectives of the project.
+## 4. Data import
 
-The current cleaning criteria include the following permitted values:
+The source files are imported using:
+
+```r
+readr::read_fwf()
+```
+
+The import process uses:
+
+- Explicit fixed-width definitions.
+- The 69 official field names used by the source layout.
+- Character format for all variables during the initial reading stage.
+- Removal of the first line of each monthly file.
+- Preservation of leading spaces until the cleaning stage.
+
+All columns are initially imported as character values to avoid unintended type conversion and loss of information.
+
+The original workflow identifies files with names matching:
 
 ```text
-COD_CLASE_MAT ∈ {0, 3, 6, 8}
+export_mensual_mat_YYYYMM.txt
 ```
+
+The six-digit period is extracted from each filename and stored in `periodo`.
+
+## 5. Missing-value cleaning
+
+A common cleaning function is applied to every imported field.
+
+The process:
+
+1. Removes unnecessary internal and external whitespace.
+2. Converts empty strings to missing values.
+3. Converts known asterisk placeholders to missing values.
+4. Converts strings composed entirely of asterisks to missing values.
+
+Examples of values converted to `NA` include:
 
 ```text
-COD_TIPO ∈ {
-  0G, 20, 21, 24, 25,
-  50, 51, 54,
-  90, 91, 92
-}
+""
+"*****"
+"******"
+"*******"
 ```
 
-Records associated with vehicle withdrawals or administrative cancellations are excluded according to the corresponding source variables.
+This procedure is necessary because the fixed-width files use several textual representations for unavailable information.
 
-The exact filtering rules will be implemented and documented in the data-cleaning scripts.
+## 6. Type conversion
 
-## 5. Data integration
+After character cleaning, the relevant fields are converted to their analytical data types.
 
-The original annual or periodic source files are imported and combined into a common analytical structure.
+### Date variables
 
-The integration process includes:
+Dates are interpreted using the format:
 
-- Harmonising column names.
-- Converting variables to consistent data types.
-- Preserving the source period.
-- Checking that the same variables have compatible formats across files.
-- Identifying duplicated or inconsistent records.
-- Validating the number of observations after each transformation.
+```text
+DDMMYYYY
+```
 
-A derived variable named `periodo` is retained to identify the corresponding source or analytical period.
+The original import process converts fields including:
 
-## 6. Data cleaning
+- `FEC_MATRICULA`.
+- `FEC_TRAMITACION`.
+- `FEC_TRAMITE`.
+- `FEC_PRIM_MATRICULACION`.
+- `FEC_PROCESO`.
 
-The cleaning process includes the following stages:
+### Integer variables
 
-### 6.1 Dates
-
-The registration date variable `FEC_MATRICULA` is converted to a valid date format.
-
-Temporal components may be derived from this variable, including:
-
-- Year.
-- Month.
-- Quarter.
-- Analysis period.
-
-### 6.2 Municipalities
-
-Municipality information is cleaned to resolve:
-
-- Differences in uppercase and lowercase letters.
-- Leading or trailing spaces.
-- Accent and encoding inconsistencies.
-- Alternative spellings.
-- Formatting differences between source files.
-
-The project retains cleaned variables such as:
-
-- `municipio_df`.
-- `municipio_std`.
-
-### 6.3 Categorical variables
-
-Categorical variables are reviewed to identify:
-
-- Missing values.
-- Unknown codes.
-- Duplicated labels.
-- Inconsistent spelling.
-- Categories with very low frequency.
-- Codes requiring correspondence tables.
-
-Relevant categorical variables include:
-
-- Vehicle brand.
-- Vehicle model.
-- Vehicle type.
-- Propulsion technology.
-- Body type.
-- Euro emission standard.
-- Renting status.
-
-### 6.4 Numerical variables
-
-Numerical variables are converted to appropriate formats and reviewed for:
-
-- Impossible values.
-- Extreme observations.
-- Missing values.
-- Inconsistent measurement scales.
-- Variables applicable only to specific vehicle technologies.
-
-Relevant numerical variables include:
+Integer conversion is applied to variables such as:
 
 - Engine displacement.
-- Engine power.
 - Vehicle weight.
+- Number of seats.
+- Number of owners.
 - CO2 emissions.
 - Electric range.
 - Electric energy consumption.
 - Distance between axles.
 
-Outliers are not removed automatically. Their treatment depends on whether they represent data errors or valid but unusual vehicles.
+### Decimal variables
 
-## 7. Data validation
+Decimal conversion is applied to:
 
-Validation checks are performed after the main cleaning stages.
+- `POTENCIA_ITV`.
+- `KW_ITV`.
 
-These checks include:
+Warnings generated by invalid numerical placeholders are suppressed after those placeholders have been converted to missing values.
 
-- Number of observations before and after filtering.
-- Distribution of missing values.
-- Frequency tables for categorical variables.
-- Summary statistics for numerical variables.
-- Verification of municipality totals.
-- Validation of renting categories.
-- Comparison of totals across years and source files.
+## 7. Selection of the analytical sample
 
-Special attention is given to municipalities with unusually high registration volumes.
+The original source contains several vehicle classes and administrative record types that are outside the scope of the thesis.
 
-These values are not assumed to be errors, as they may be associated with:
+The final preparation script applies the following vehicle-class filter:
 
-- Renting companies.
-- Corporate vehicle fleets.
-- Administrative registration practices.
-- Differences in municipal vehicle taxation.
-- A mismatch between registration location and actual vehicle use.
-
-## 8. Descriptive analysis
-
-The descriptive stage summarises the main characteristics of the registrations.
-
-The analysis includes:
-
-- Total registrations by year.
-- Registrations by municipality.
-- Registrations by vehicle type.
-- Registrations by propulsion technology.
-- Renting distribution.
-- Brand and model frequencies.
-- Distributions of power, weight and emissions.
-- Evolution of electric and hybrid vehicles.
-- Missing-data patterns.
-
-Tables and figures are designed to communicate both absolute volumes and relative distributions.
-
-## 9. Territorial analysis
-
-The territorial analysis studies differences between municipalities.
-
-The main outputs may include:
-
-- Municipal registration totals.
-- Annual municipal trends.
-- Registration rates or normalised indicators when suitable denominator data are available.
-- Renting concentration by municipality.
-- Propulsion composition by municipality.
-- Comparison between Madrid city and surrounding municipalities.
-- Identification of atypical municipal profiles.
-
-Municipal results are interpreted carefully because registration totals do not necessarily represent the number of vehicles used by local residents.
-
-Alcobendas is analysed as a particularly relevant case due to the concentration of renting and corporate registrations.
-
-Other municipalities with unusually high totals are examined separately to determine whether their patterns may be associated with taxation or administrative factors.
-
-## 10. Multivariate analysis
-
-The dataset contains both numerical and categorical variables.
-
-For this reason, the project considers multivariate methods adapted to mixed data.
-
-### 10.1 Multiple Correspondence Analysis
-
-Multiple Correspondence Analysis may be used when the selected analytical variables are entirely categorical.
-
-Its purpose is to:
-
-- Reduce the dimensionality of the categorical information.
-- Identify associations between categories.
-- Visualise vehicle or territorial profiles.
-- Generate coordinates suitable for subsequent clustering.
-
-### 10.2 Factor Analysis of Mixed Data
-
-Factor Analysis of Mixed Data may be used when numerical and categorical variables are analysed jointly.
-
-Its purpose is to:
-
-- Balance the contribution of numerical and categorical information.
-- Identify the main dimensions of variation.
-- Reduce redundancy between variables.
-- Create a lower-dimensional representation for cluster analysis.
-
-The final choice between MCA and FAMD depends on the variables included in each analytical dataset.
-
-## 11. Cluster analysis
-
-Cluster analysis is used to identify groups of observations with similar characteristics.
-
-Depending on the analytical level, clustering may be applied to:
-
-- Individual vehicle registrations.
-- Aggregated vehicle profiles.
-- Municipal indicators.
-- Coordinates obtained from MCA or FAMD.
-
-The clustering workflow includes:
-
-1. Selecting the analytical variables.
-2. Treating missing values.
-3. Reducing dimensionality when necessary.
-4. Comparing different numbers of clusters.
-5. Evaluating cluster stability and interpretability.
-6. Profiling each cluster using the original variables.
-7. Assigning descriptive names only after examining the results.
-
-The number of clusters is not selected solely from a statistical criterion. Interpretability and usefulness for the research objectives are also considered.
-
-## 12. Temporal analysis
-
-The temporal stage examines how registration patterns evolve between 2014 and 2025.
-
-The analysis may include:
-
-- Annual and monthly registration totals.
-- Growth rates.
-- Changes in propulsion technologies.
-- Evolution of environmental characteristics.
-- Changes in renting activity.
-- Trends by municipality or territorial group.
-- Evolution of the profiles identified through clustering.
-
-Time-series models will only be applied when the frequency, completeness and statistical properties of the aggregated series justify their use.
-
-## 13. Visualisation
-
-Visualisations are created to make the main findings understandable to both technical and non-technical audiences.
-
-The planned outputs include:
-
-- Time-series charts.
-- Municipal rankings.
-- Territorial maps.
-- Propulsion-composition charts.
-- Madrid city versus surrounding municipalities comparisons.
-- Factor maps from MCA or FAMD.
-- Cluster-profile charts.
-- Missing-data summaries.
-
-Final figures will be stored in:
-
-```text
-figures/
+```r
+COD_CLASE_MAT %in% c("0", "1", "3", "8")
 ```
 
-Only reviewed and publication-ready figures will be included in the public repository.
+The permitted vehicle-type codes are:
 
-## 14. Reproducibility
+```r
+COD_TIPO %in% c("24", "25", "40")
+```
 
-The analysis is organised into separate scripts according to their purpose.
+The geographic filter is:
 
-The planned script structure is:
+```r
+COD_PROVINCIA_VEH == "M"
+```
+
+Only new registrations are retained:
+
+```r
+IND_NUEVO_USADO == "N"
+```
+
+The following administrative service codes are excluded:
+
+```r
+sprintf("A%02d", 1:20)
+```
+
+This corresponds to codes from `A01` to `A20`.
+
+## 8. Exclusion of withdrawn records
+
+Records are excluded when any of the following administrative withdrawal fields contains a value:
+
+```r
+IND_BAJA_DEF
+IND_BAJA_TEMP
+BAJA_TELEMATICA
+```
+
+These variables are used only during filtering and are removed from the final master dataset.
+
+## 9. Monthly integration
+
+Each monthly file is processed using the same import, conversion and filtering function.
+
+The monthly datasets are then combined row-wise into a single master dataset.
+
+The original workflow stores the result as:
+
+```text
+base22.rds
+```
+
+An additional CSV copy was created during the original project, but the public repository will not include the complete master dataset because of its size.
+
+The RDS format is preferred internally because it:
+
+- Preserves R data types.
+- Loads faster than a large CSV.
+- Requires less storage.
+- Avoids repeating the complete import process during every analysis.
+
+## 10. Final master dataset
+
+The final master dataset contains 22 variables.
+
+These include:
+
+- Registration date.
+- Brand and model.
+- Vehicle type.
+- Propulsion code.
+- New or used indicator.
+- Individual or legal ownership.
+- Administrative service code.
+- Engine displacement.
+- Technical power fields.
+- Vehicle weight.
+- Municipality.
+- CO2 emissions.
+- Renting status.
+- Body type.
+- Euro emissions standard.
+- Electric energy consumption.
+- Electric-vehicle category.
+- Electric range.
+- Distance between axles.
+- Monthly source period.
+
+The complete definitions are documented in:
+
+```text
+docs/data_dictionary.md
+```
+
+## 11. Data validation
+
+Validation is performed after import and after the main cleaning stages.
+
+The checks include:
+
+- Number of imported files.
+- Number of observations by source period.
+- Date range.
+- Total number of observations.
+- Variable data types.
+- Frequency tables for categorical variables.
+- Missing-value counts.
+- Summary statistics for numerical variables.
+- Identification of invalid technical values.
+- Verification of municipal matching.
+- Comparison between monthly totals and the complete dataset.
+
+The final CSV generated by the original workflow contains 3,115,064 lines, including the header, confirming 3,115,063 observations.
+
+## 12. Descriptive analysis
+
+The descriptive analysis examines the main evolution of passenger car registrations between 2015 and 2025.
+
+The principal outputs include:
+
+- Monthly registration totals.
+- Annual registration totals.
+- Annual percentage variation.
+- Propulsion technology distribution.
+- Ownership type.
+- Renting status.
+- Main brands and models.
+- Vehicle power.
+- Engine displacement.
+- CO2 emissions.
+- Electric energy consumption.
+- Electric range.
+
+Results are presented through:
+
+- Frequency tables.
+- Percentages.
+- Annual and monthly time plots.
+- Rankings.
+- Distribution plots.
+- Comparative charts.
+
+## 13. Propulsion classification
+
+A derived variable named `tipo_propulsion` is created using both:
+
+```text
+COD_PROPULSION_ITV
+CATEGORIA_VEHICULO_ELECTRICO
+```
+
+The electric-vehicle category is evaluated first so that hybrid vehicles are not incorrectly assigned to a general combustion or electric category.
+
+The final classification is:
+
+```r
+case_when(
+  CATEGORIA_VEHICULO_ELECTRICO %in% c("PHEV", "HEV", "REEV") ~ "Hibrido",
+  COD_PROPULSION_ITV == "2" ~ "Electrico",
+  COD_PROPULSION_ITV == "0" ~ "Gasolina",
+  COD_PROPULSION_ITV == "1" ~ "Diesel",
+  TRUE ~ NA_character_
+)
+```
+
+This variable is used in the descriptive, factorial and cluster analyses.
+
+## 14. Territorial analysis
+
+The territorial analysis studies how registrations are distributed across municipalities in the Community of Madrid.
+
+A municipal boundary shapefile in ETRS89 and INSPIRE format is used to create the maps.
+
+The shapefile is filtered to retain:
+
+```r
+NATLEVNAME == "Municipio"
+CODNUT3 == "ES300"
+```
+
+## 15. Municipality standardisation
+
+Municipality names from the DGT data and the geographic file require standardisation before they can be joined.
+
+The cleaning process includes:
+
+- Conversion to UTF-8.
+- Removal of accents.
+- Conversion to uppercase.
+- Removal of punctuation.
+- Removal of selected articles and prepositions.
+- Normalisation of repeated spaces.
+
+A manual equivalence table is used for municipality names affected by:
+
+- Encoding errors.
+- Abbreviations.
+- Alternative official names.
+- Differences between the DGT and map datasets.
+
+The matching process is validated by identifying municipality names that remain unmatched.
+
+## 16. Territorial indicators
+
+The territorial analysis produces:
+
+- Registration totals by municipality.
+- Municipal rankings.
+- Percentage of total registrations.
+- Cumulative percentage.
+- Concentration among the top 1, 5, 10 and 20 municipalities.
+- Municipal maps.
+- Annual evolution of leading municipalities.
+- Renting percentages.
+- Individual versus legal ownership distributions.
+
+The analysis does not assume that registration municipality represents actual vehicle use.
+
+## 17. Territorial classification
+
+For interpretation, municipalities are divided into four groups:
+
+1. Madrid city.
+2. Metropolitan or business municipalities.
+3. Peripheral municipalities with atypical registration volumes.
+4. Remaining municipalities.
+
+The atypical peripheral group includes municipalities selected because of their unusually high registration volumes.
+
+The metropolitan or business group contains municipalities with substantial population, business activity or corporate registrations.
+
+This grouping is analytical and interpretative. It is not an official administrative classification.
+
+## 18. Renting and ownership analysis
+
+The renting variable is standardised to:
+
+```text
+S
+N
+Missing
+```
+
+Ownership is standardised into:
+
+```text
+Individual
+Legal entity
+Missing
+```
+
+The analysis compares renting and ownership by:
+
+- Municipality.
+- Territorial group.
+- Total registration volume.
+- Year.
+- Cluster profile.
+
+This is particularly important because corporate fleets and renting companies can produce large municipal totals that do not reflect local household demand.
+
+## 19. FAMD analytical dataset
+
+Factor Analysis of Mixed Data (`FAMD`) is used because the segmentation stage combines numerical and categorical variables.
+
+A sequential identifier is created before filtering to preserve alignment between:
+
+- The cleaned analytical records.
+- The FAMD coordinates.
+- The cluster assignments.
+
+The monthly date is reconstructed from `FEC_MATRICULA` using the first day of each month.
+
+## 20. Variables included in the FAMD
+
+The final FAMD uses five quantitative variables:
+
+```text
+CILINDRADA_ITV
+KW_ITV
+CO2_norm
+CONSUMO_WH_KM_ITV
+DISTANCIA_EJES_12_ITV
+```
+
+It also uses three qualitative variables:
+
+```text
+tipo_propulsion
+RENTING
+PERSONA_FISICA_JURIDICA
+```
+
+This gives a total of eight active variables.
+
+## 21. FAMD-specific cleaning
+
+The FAMD subset applies additional technical validation.
+
+The initial filters include:
+
+```r
+KW_ITV >= 10
+DISTANCIA_EJES_12_ITV >= 1000
+DISTANCIA_EJES_12_ITV <= 6000
+```
+
+Engine displacement is treated as follows:
+
+- Electric vehicles are assigned a value of zero.
+- Non-positive values for other technologies are treated as missing.
+
+Electric energy consumption is treated as follows:
+
+- Petrol and diesel vehicles are assigned a value of zero.
+- Negative values are treated as missing.
+
+Distance between axles is treated as missing when:
+
+- It is non-positive.
+- It is equal to the placeholder value `9999`.
+
+CO2 emissions are treated as follows:
+
+- Non-positive values are initially treated as missing.
+- Electric vehicles are subsequently assigned a value of zero.
+
+Only complete observations for the eight FAMD variables are retained in the final factorial dataset.
+
+## 22. Normalisation of CO2 emissions
+
+The transition from the NEDC to the WLTP emissions framework creates a comparability problem over time.
+
+The data are divided into two periods:
+
+```r
+grupo_norma = if_else(anio < 2021, "NEDC", "WLTP")
+```
+
+CO2 emissions are standardised separately within each period:
+
+```r
+CO2_norm = as.numeric(scale(CO2_ITV))
+```
+
+The resulting variable represents the relative emissions position of each vehicle within its applicable measurement framework.
+
+It is not interpreted as an absolute value in grams per kilometre.
+
+## 23. Factor Analysis of Mixed Data
+
+The main factorial model is estimated using:
+
+```r
+FactoMineR::FAMD(
+  df_famd_model,
+  ncp = 8,
+  graph = FALSE
+)
+```
+
+Eight factorial components are retained in the fitted object.
+
+The analysis examines:
+
+- Eigenvalues.
+- Cumulative explained inertia.
+- Variable contributions.
+- Factor maps.
+- Individual coordinates.
+- The interpretation of the first factorial dimensions.
+
+Additional sensitivity models are used to examine the influence of variables such as renting and ownership.
+
+## 24. Export of factorial results
+
+The following objects are preserved for the clustering stage:
+
+- Clean FAMD dataset.
+- Individual factorial coordinates.
+- Eigenvalue table.
+- Variable contributions.
+- Variable descriptions.
+- Model parameters.
+- Sequential identifiers.
+
+The alignment between the analytical data and factorial coordinates is validated before export.
+
+## 25. Selection of dimensions for clustering
+
+Clustering is performed on the FAMD coordinates rather than directly on the original mixed variables.
+
+The number of dimensions is selected using cumulative explained inertia.
+
+The workflow identifies the first dimension at which cumulative inertia reaches at least 60%.
+
+The final number is constrained to:
+
+```text
+Minimum: 3 dimensions
+Maximum: 6 dimensions
+```
+
+This is implemented as:
+
+```r
+n_dim_clust <- max(3, min(n_dim_auto, 6))
+```
+
+The selected factorial coordinates are renamed consistently as:
+
+```text
+Dim1, Dim2, ..., DimN
+```
+
+## 26. Selection of the number of clusters
+
+Several cluster solutions are evaluated.
+
+The exploratory range is:
+
+```text
+k = 2 to 10
+```
+
+The principal candidate solutions are:
+
+```text
+k = 4, 5, 6, 7 and 8
+```
+
+The evaluation uses:
+
+- Within-cluster sum of squares.
+- Elbow method.
+- Mean silhouette width.
+- Cluster size.
+- Numerical profiles.
+- Propulsion composition.
+- Ownership composition.
+- Renting composition.
+- Interpretability.
+
+The elbow and silhouette calculations use random samples of up to 2,000 observations to reduce computational cost.
+
+## 27. Final K-means model
+
+The final solution uses:
+
+```text
+k = 5
+```
+
+The model is estimated on the selected FAMD coordinates using:
+
+```r
+kmeans(
+  data_clust,
+  centers = 5,
+  nstart = 50,
+  iter.max = 100
+)
+```
+
+A fixed random seed of `123` is used for reproducibility.
+
+The final cluster solution is also compared across several alternative seeds using:
+
+- Total within-cluster sum of squares.
+- Between-cluster sum of squares.
+- Ratio of between-cluster variation to total variation.
+
+## 28. Cluster profiling
+
+The final clusters are interpreted using the original analytical variables.
+
+Profiles are compared through:
+
+- Mean power.
+- Mean engine displacement.
+- Mean normalised CO2 emissions.
+- Mean electric consumption.
+- Mean distance between axles.
+- Propulsion distribution.
+- Renting distribution.
+- Individual or legal ownership.
+- Monthly evolution.
+
+The five final profiles are interpreted as:
+
+1. Business-oriented hybrid vehicles.
+2. Company and renting vehicles.
+3. Higher-power vehicles.
+4. Privately owned conventional vehicles.
+5. Electric vehicles.
+
+The labels are descriptive summaries and are assigned after examining the statistical profiles.
+
+## 29. Monthly time-series construction
+
+The time-series analysis uses all valid registrations between:
+
+```text
+2015-01-01
+2025-12-31
+```
+
+Registrations are aggregated by calendar month.
+
+A complete monthly sequence is created from January 2015 to December 2025.
+
+Any theoretically absent month would be assigned a value of zero, ensuring a regular series of 132 observations.
+
+The monthly series is converted into an R time-series object with:
+
+```r
+ts(
+  values,
+  start = c(2015, 1),
+  frequency = 12
+)
+```
+
+## 30. Time-series analysis
+
+The temporal analysis includes:
+
+- Monthly totals.
+- Annual totals.
+- Annual absolute variation.
+- Annual percentage variation.
+- LOESS-smoothed trend.
+- Comparison of pre-2020 and post-2020 periods.
+- Distribution by calendar month.
+- Monthly means and medians.
+- Identification of minimum and maximum months.
+- STL decomposition.
+
+The year 2020 is marked explicitly as an exceptional disruption in the descriptive figures.
+
+## 31. STL decomposition
+
+The monthly series is decomposed using:
+
+```r
+stl(
+  ts_matriculaciones,
+  s.window = "periodic"
+)
+```
+
+This separates the series into:
+
+- Trend.
+- Seasonal component.
+- Irregular component.
+
+The objective is descriptive rather than predictive.
+
+The final thesis does not rely on an ARIMA forecast as a principal result.
+
+## 32. Visualisation
+
+Visualisations are created using mainly:
+
+- `ggplot2`.
+- `sf`.
+- `factoextra`.
+- `patchwork`.
+- `scales`.
+
+The final outputs include:
+
+- Annual and monthly time plots.
+- Propulsion evolution.
+- Municipal maps.
+- Municipal rankings.
+- Territorial concentration curves.
+- Renting and ownership comparisons.
+- FAMD variable maps.
+- Cluster projections.
+- Cluster profile charts.
+- STL components.
+
+Only reviewed and publication-ready figures will be included in the public `figures/` directory.
+
+## 33. Reproducibility strategy
+
+The original thesis code contains absolute local paths and intermediate files created during development.
+
+The public repository will replace them with:
+
+- Relative paths.
+- A central configuration script.
+- Separate import, cleaning and analysis scripts.
+- Explicit package dependencies.
+- Clear input and output directories.
+- Validation checks.
+- Documented random seeds.
+- Small samples or aggregated outputs where possible.
+
+The original analytical decisions will be retained unless a correction is explicitly documented.
+
+## 34. Planned public workflow
+
+The cleaned public scripts will follow this structure:
 
 ```text
 R/
 ├── 00_configuration.R
-├── 01_data_import.R
-├── 02_data_cleaning.R
+├── 01_import_fixed_width_data.R
+├── 02_clean_and_filter_data.R
 ├── 03_descriptive_analysis.R
 ├── 04_territorial_analysis.R
-├── 05_multivariate_analysis.R
-├── 06_clustering.R
-├── 07_temporal_analysis.R
-└── 08_final_visualisations.R
+├── 05_famd_analysis.R
+├── 06_cluster_analysis.R
+├── 07_time_series_analysis.R
+└── 08_export_figures.R
 ```
 
-The final filenames may be adapted to the actual workflow.
+The final structure may be adjusted if functions are separated into additional reusable files.
 
-Each script should:
+## 35. Limitations
 
-- Have a clearly defined purpose.
-- Avoid unnecessary duplication.
-- Use relative file paths.
-- Document important transformations.
-- Produce reproducible outputs.
-- Avoid modifying the original source files.
+The main methodological limitations are:
 
-## 15. Limitations
+- The municipality represents the administrative place of registration and not necessarily the place of actual use.
+- Corporate fleets and renting companies can dominate the totals of some municipalities.
+- The territorial classification is analytical rather than official.
+- Technical variables contain missing and non-applicable values.
+- Some coding conventions may change between monthly source files.
+- NEDC and WLTP emissions values are not directly comparable without adjustment.
+- Complete-case selection reduces the number of observations available for FAMD.
+- K-means assumes a geometric cluster structure in the selected factorial space.
+- Cluster labels require substantive interpretation.
+- The administrative data were not originally collected for this research.
+- Descriptive associations should not be interpreted automatically as causal relationships.
+- The study covers new passenger car registrations rather than the complete vehicle fleet.
 
-The main methodological limitations include:
+## 36. Source-of-truth principle
 
-- Registration municipality may differ from the place of actual vehicle use.
-- Corporate and renting fleets may dominate the totals of some municipalities.
-- Some technical variables contain missing or non-applicable values.
-- Coding conventions may change between source periods.
-- Administrative data were not originally collected specifically for this research.
-- Large sample sizes can make small differences appear statistically important.
-- Descriptive associations must not be interpreted automatically as causal relationships.
+The final public R scripts will be the authoritative source for:
 
-These limitations will be considered in the interpretation of all results.
+- Fixed-width definitions.
+- Data-type conversions.
+- Missing-value rules.
+- Filtering criteria.
+- Derived variables.
+- FAMD preparation.
+- Cluster parameters.
+- Time-series construction.
+
+Any future change affecting the results will be documented through the Git commit history.
