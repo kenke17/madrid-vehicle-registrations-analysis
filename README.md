@@ -1,65 +1,218 @@
-# Vehicle Registrations in Madrid
+# Passenger Car Registrations in the Community of Madrid
 
-Statistical and territorial analysis of vehicle registrations in the Community of Madrid between 2014 and 2025.
+**Temporal evolution, technological transformation, territorial concentration and market segmentation, 2015–2025**
 
 This repository contains the code, methodology and main results of my Bachelor's Thesis in Applied Statistics at Universidad Complutense de Madrid.
 
 ## Project overview
 
-The project analyses approximately five million vehicle registration records obtained from the Spanish Directorate-General for Traffic.
+This project analyses passenger car registrations in the Community of Madrid between January 2015 and December 2025 using monthly administrative microdata from the Spanish Directorate-General for Traffic (`Dirección General de Tráfico`, DGT).
 
-The objective is to study the evolution and territorial distribution of vehicle registrations in the Community of Madrid, paying particular attention to:
+After importing, cleaning and filtering the original records, the final analytical dataset contains:
 
-- Differences between Madrid city and the surrounding municipalities.
-- Changes in propulsion technologies and vehicle characteristics.
-- Municipalities with unusually high registration volumes.
-- Vehicle and territorial segmentation using multivariate methods.
-- Evolution of registration patterns between 2014 and 2025.
+- **3,115,063 valid passenger car registrations**
+- **132 monthly periods**
+- **11 years of data**
+- Technical, environmental, territorial and ownership-related variables
 
-## Main methods
+The project combines descriptive statistics, territorial analysis, Factor Analysis of Mixed Data, cluster analysis and time-series analysis.
 
-- Data cleaning and validation.
-- Exploratory data analysis.
-- Territorial analysis.
-- Multiple Correspondence Analysis and FAMD.
-- Cluster analysis.
-- Time evolution and trend analysis.
-- Data visualisation with R.
+## Research objectives
 
-## Dataset
+The main objective is to study how the passenger car registration market in the Community of Madrid changed between 2015 and 2025.
 
-The original dataset contains approximately five million observations and includes variables related to:
+The analysis focuses on:
 
-- Registration date.
-- Municipality.
-- Vehicle brand and model.
-- Vehicle type.
-- Propulsion technology.
-- Engine power and displacement.
-- CO₂ emissions.
-- European emission standard.
-- Renting status.
-- Electric range and energy consumption.
+- The temporal evolution of registration volumes.
+- Changes in propulsion technologies.
+- The development of hybrid and electric vehicles.
+- The evolution of vehicle power, engine displacement and CO2 emissions.
+- Territorial concentration across municipalities.
+- The role of legal entities, corporate fleets and renting.
+- The identification of differentiated market segments.
+- Monthly trend, seasonality and the disruption observed in 2020.
 
-The original raw data are not included in this repository due to their size. Instructions, sample data and aggregated results will be added to allow the analysis to be understood and partially reproduced.
+## Data source and processing
+
+The project uses monthly registration microdata provided by the DGT.
+
+The original files:
+
+- Are distributed as fixed-width text files.
+- Contain a layout of 69 fields.
+- Are imported using `readr::read_fwf()`.
+- Require cleaning of missing values, dates, numerical variables and categorical codes.
+- Are filtered to retain valid new passenger car registrations in the Community of Madrid.
+
+The original raw files are not included in this repository because of their size and because they remain subject to the conditions established by their official provider.
+
+More information is available in [`data/README.md`](data/README.md).
+
+## Analytical workflow
+
+```text
+Monthly DGT fixed-width files
+            ↓
+Import and data-type conversion
+            ↓
+Cleaning and validation
+            ↓
+Selection of valid passenger car registrations
+            ↓
+Master analytical dataset
+            ↓
+Descriptive and territorial analysis
+            ↓
+Factor Analysis of Mixed Data
+            ↓
+K-means cluster analysis
+            ↓
+Monthly time-series analysis
+            ↓
+Interpretation and visual communication
+```
+
+## Methods
+
+The project applies the following methods:
+
+- Data cleaning and quality validation.
+- Descriptive statistics.
+- Monthly and annual aggregation.
+- Territorial analysis by municipality.
+- Analysis of propulsion technologies.
+- Factor Analysis of Mixed Data (`FAMD`).
+- K-means clustering on factorial coordinates.
+- Cluster profiling and temporal evolution.
+- Time-series decomposition using STL.
+- Trend and seasonality analysis.
+- Statistical data visualisation with R.
+
+## Main findings
+
+### Growth and disruption
+
+Annual registrations increased from **224,111 in 2015** to **351,637 in 2025**, the highest value in the study period.
+
+This growth was interrupted in 2020, when registrations fell by **18.05%** compared with 2019. Recovery became clearer from 2022 onwards.
+
+### Technological transformation
+
+The market changed substantially during the study period:
+
+| Propulsion technology | 2015 | 2025 |
+|---|---:|---:|
+| Diesel | 74.74% | 10.56% |
+| Petrol | 24.11% | 19.43% |
+| Hybrid | 0.86% | 60.77% |
+| Electric | 0.29% | 9.24% |
+
+Hybrid passenger cars became the dominant category, while diesel registrations lost most of their initial market share.
+
+### Territorial concentration
+
+Registrations are highly concentrated in a limited number of municipalities.
+
+Some municipalities record volumes that are unusually high relative to their resident population. These patterns are strongly associated with:
+
+- Legal ownership.
+- Corporate fleets.
+- Renting activity.
+- Administrative registration practices.
+- Possible municipal taxation differences.
+
+Alcobendas is a particularly relevant example because of its high concentration of legal-entity and renting registrations.
+
+### Market segmentation
+
+Factor Analysis of Mixed Data and K-means clustering identified five market profiles:
+
+1. Business-oriented hybrid vehicles.
+2. Conventional company and renting vehicles.
+3. Higher-power and higher-displacement vehicles.
+4. Conventional privately owned vehicles.
+5. Electric vehicles.
+
+These profiles reveal that the market is differentiated not only by technical characteristics, but also by ownership and renting status.
+
+### Monthly structure
+
+The monthly series shows:
+
+- A long-term upward trend.
+- An exceptional disruption in 2020.
+- A gradual recovery after the pandemic.
+- Lower registration activity in August.
+- Higher activity in months such as December, June, July and November.
 
 ## Repository structure
 
 ```text
 .
-├── R/             # R scripts
+├── R/                    # Clean and reusable R scripts
 ├── data/
-│   ├── raw/       # Original data, not tracked by Git
-│   ├── sample/    # Small reproducible data samples
-│   └── processed/ # Aggregated and processed results
-├── docs/          # Methodology and documentation
-├── figures/       # Final visualisations
-├── notebooks/     # Quarto or R Markdown analyses
-└── reports/       # Executive summary and final report
+│   ├── raw/              # Original DGT files, excluded from Git
+│   ├── sample/           # Reduced reproducible samples
+│   └── processed/        # Small aggregated outputs
+├── docs/                 # Project documentation
+├── figures/              # Publication-ready visualisations
+├── notebooks/            # Quarto analytical documents
+└── reports/              # Final report and executive summary
+```
 
-```text
+## Documentation
+
+- [Project overview](docs/project_overview.md)
+- [Methodology](docs/methodology.md)
+- [Data dictionary](docs/data_dictionary.md)
+- [Results](docs/results.md)
+- [Data documentation](data/README.md)
+
+These documents are currently being revised to match the final version of the Bachelor's Thesis.
+
+## Technologies
+
+- R
+- RStudio
+- Quarto
+- `dplyr`
+- `readr`
+- `ggplot2`
+- `FactoMineR`
+- `cluster`
+- Git and GitHub
+
+## Reproducibility
+
+The original project code is being reorganised into clean, documented and reproducible scripts.
+
+The public version will:
+
+- Use relative paths.
+- Keep raw data outside version control.
+- Separate data preparation from statistical analysis.
+- Include the package dependencies required for execution.
+- Provide aggregated outputs or reduced samples where redistribution is appropriate.
+
+## Limitations
+
+This project analyses new passenger car registrations rather than the complete vehicle fleet.
+
+The municipality recorded in the data corresponds to the administrative location of the vehicle and does not necessarily represent its actual place of use.
+
+The observed associations between municipality, renting, legal ownership and registration volume are descriptive and should not be interpreted automatically as causal relationships.
+
 ## Author
 
 **Miguel Moscardó**
-Bachelor's Degree in Applied Statistics
+
+Bachelor's Degree in Applied Statistics  
 Universidad Complutense de Madrid
+
+## Licensing
+
+The source code is available under the [MIT License](LICENSE).
+
+Written content, reports and original visualisations are subject to the conditions described in [`CONTENT_LICENSE.md`](CONTENT_LICENSE.md).
+
+The original DGT data are not covered by these licenses.
