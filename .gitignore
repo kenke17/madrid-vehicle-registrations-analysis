@@ -40,10 +40,57 @@ vignettes/*.pdf
 .Renviron
 
 # pkgdown site
-docs/
+# docs/
 
 # translation temp files
 po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# ==========================================
+# Datos del proyecto
+# ==========================================
+
+# Datos originales: nunca se publican
+data/raw/
+
+# Formatos de datos pesados
+*.parquet
+*.rds
+*.RData
+*.zip
+*.7z
+
+# No publicar CSV salvo muestras y resultados agregados
+*.csv
+!data/sample/*.csv
+!data/processed/*.csv
+
+# ==========================================
+# Archivos locales y credenciales
+# ==========================================
+
+.env
+.Renviron
+*.key
+*.pem
+
+# ==========================================
+# Archivos generados por Quarto
+# ==========================================
+
+.quarto/
+_site/
+*_cache/
+*_files/
+
+# ==========================================
+# Archivos temporales
+# ==========================================
+
+*.tmp
+*.log
+~$*
+.DS_Store
+Thumbs.db
