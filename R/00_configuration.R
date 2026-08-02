@@ -248,6 +248,21 @@ cluster_detailed_candidate_values <- 4:8
 
 cluster_validation_sample_size <- 2000L
 
+cluster_plot_sample_size <- 50000L
+
+cluster_exploratory_nstart <- 10L
+cluster_candidate_nstart <- 15L
+
+cluster_stability_seeds <- c(
+  123L,
+  456L,
+  789L,
+  101112L,
+  131415L
+)
+
+cluster_results_filename <- "cluster_analysis_results.rds"
+cluster_assignments_filename <- "cluster_assignments.rds"
 
 # Time-series configuration ----------------------------------------------------
 
