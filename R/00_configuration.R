@@ -266,8 +266,15 @@ cluster_assignments_filename <- "cluster_assignments.rds"
 
 # Time-series configuration ----------------------------------------------------
 
+# Time-series configuration ----------------------------------------------------
+
 time_series_frequency <- 12L
 stl_seasonal_window <- "periodic"
+
+covid_break_date <- as.Date("2020-03-01")
+time_series_loess_span <- 0.18
+
+time_series_results_filename <- "time_series_results.rds"
 
 
 # Confirmation message ---------------------------------------------------------
