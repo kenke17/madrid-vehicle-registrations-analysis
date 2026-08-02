@@ -94,3 +94,17 @@ _site/
 ~$*
 .DS_Store
 Thumbs.db
+
+# ==========================================
+# External geospatial source files
+# ==========================================
+
+data/external/geospatial/
+
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.sbn
+*.sbx
