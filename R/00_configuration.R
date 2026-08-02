@@ -169,7 +169,7 @@ madrid_city_name <- "Madrid"
 source_file_pattern <- "^export_mensual_mat_\\d{6}\\.txt$"
 source_period_pattern <- "\\d{6}"
 
-master_dataset_filename <- "passenger_car_registrations_madrid.rds"
+master_dataset_filename <- "base22.rds"
 
 
 # Final filtering rules --------------------------------------------------------
