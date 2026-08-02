@@ -449,13 +449,14 @@ create_famd_complete_case_data <- function(
       )
     ) |>
     dplyr::select(
-      .data$id,
-      .data$periodo,
       dplyr::all_of(
-        famd_active_variables
-      )
+        c(
+            "id",
+            "periodo",
+            famd_active_variables
+        )
+     )
     )
-
   if (
     isTRUE(validate_expected_size) &&
       nrow(complete_data) !=
