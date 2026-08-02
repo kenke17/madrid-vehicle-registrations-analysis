@@ -106,19 +106,35 @@ check_project_packages("core")
 path_data_raw <- here::here("data", "raw")
 path_data_sample <- here::here("data", "sample")
 path_data_processed <- here::here("data", "processed")
+path_data_external <- here::here("data", "external")
+path_geospatial <- here::here(
+  "data",
+  "external",
+  "geospatial"
+)
 
 path_scripts <- here::here("R")
 path_notebooks <- here::here("notebooks")
 path_figures <- here::here("figures")
 path_reports <- here::here("reports")
 path_docs <- here::here("docs")
+municipal_shapefile_filename <- paste0(
+  "recintos_municipales_inspire_",
+  "peninbal_etrs89.shp"
+)
 
+municipal_shapefile_path <- file.path(
+  path_geospatial,
+  municipal_shapefile_filename
+)
 
 # Create output directories if necessary --------------------------------------
 
 output_directories <- c(
   path_data_sample,
   path_data_processed,
+  path_data_external,
+  path_geospatial,
   path_figures,
   path_reports
 )
