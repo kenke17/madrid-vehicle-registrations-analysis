@@ -131,6 +131,41 @@ normalise_municipality_name <- function(x) {
     stringr::str_squish()
 }
 
+repair_municipality_encoding <- function(x) {
+
+  replacement_character <- "\uFFFD"
+
+  x <- x |>
+    as.character() |>
+    enc2utf8() |>
+    stringr::str_squish()
+
+  x <- stringr::str_replace_all(
+    x,
+    stringr::fixed(
+      paste0(
+        "PI",
+        replacement_character,
+        "UECAR"
+      )
+    ),
+    "PI\u00D1UECAR"
+  )
+
+  x <- stringr::str_replace_all(
+    x,
+    stringr::fixed(
+      paste0(
+        "POZUELO DE ALARC",
+        replacement_character,
+        "N"
+      )
+    ),
+    "POZUELO DE ALARC\u00D3N"
+  )
+
+  x
+}
 
 # Manual municipality equivalences --------------------------------------------
 
@@ -162,7 +197,7 @@ create_municipality_equivalences <- function() {
     "ORUSCO DE TAJU A",              "Orusco de Tajuña",
     "GARGANTILLA LOZOYA",            "Gargantilla del Lozoya y Pinilla de Buitrago",
     "LOZOYUELA N SIETEIGL",          "Lozoyuela-Navas-Sieteiglesias",
-    "PIUECAR",                       "Piñuécar-Gandullas",
+    "PINUECAR",                      "Pi\u00F1u\u00E9car-Gandullas",
     "NAVARREDONDA",                  "Navarredonda y San Mamés",
     "HORCAJO DE LA SIERRA",          "Horcajo de la Sierra-Aoslos",
     "SAN SEBASTIAN DE LOS REY",      "San Sebastián de los Reyes",
@@ -182,7 +217,7 @@ create_municipality_equivalences <- function() {
       )
     ) |>
     dplyr::distinct(
-      .data$source_name_std,
+      source_name_std,
       .keep_all = TRUE
     )
 }
@@ -304,7 +339,7 @@ create_municipality_map_lookup <- function(
       municipality_name = .data$municipality_name
     ) |>
     dplyr::distinct(
-      .data$municipality_std,
+      municipality_std,
       .keep_all = TRUE
     )
 }
@@ -427,48 +462,61 @@ prepare_territorial_data <- function(
 
   data |>
     dplyr::mutate(
-      municipality_source = .data$MUNICIPIO,
-      source_name_std = normalise_municipality_name(
-        .data$MUNICIPIO
-      )
+      municipality_source =
+        repair_municipality_encoding(
+          .data$MUNICIPIO
+        ),
+      source_name_std =
+        normalise_municipality_name(
+          .data$municipality_source
+        )
     ) |>
     dplyr::left_join(
       equivalences,
       by = "source_name_std"
     ) |>
     dplyr::mutate(
-      municipality_corrected = dplyr::coalesce(
-        .data$map_name,
-        .data$MUNICIPIO
-      ),
-      municipality_std = normalise_municipality_name(
-        .data$municipality_corrected
-      )
+      municipality_corrected =
+        dplyr::coalesce(
+          .data$map_name,
+          .data$municipality_source
+        ),
+      municipality_std =
+        normalise_municipality_name(
+          .data$municipality_corrected
+        )
     ) |>
     dplyr::left_join(
       map_lookup,
       by = "municipality_std"
     ) |>
     dplyr::mutate(
-      municipality_name = dplyr::coalesce(
-        .data$municipality_name,
-        .data$municipality_corrected,
-        .data$MUNICIPIO
-      ),
-      territorial_group = assign_territorial_group(
-        .data$municipality_std
-      ),
-      renting_status = normalise_renting(
-        .data$RENTING
-      ),
-      ownership_type = normalise_ownership(
-        .data$PERSONA_FISICA_JURIDICA
-      ),
-      registration_year = lubridate::year(
-        as.Date(.data$FEC_MATRICULA)
-      )
+      municipality_name =
+        dplyr::coalesce(
+          .data$municipality_name,
+          .data$municipality_corrected,
+          .data$municipality_source
+        ),
+      territorial_group =
+        assign_territorial_group(
+          .data$municipality_std
+        ),
+      renting_status =
+        normalise_renting(
+          .data$RENTING
+        ),
+      ownership_type =
+        normalise_ownership(
+          .data$PERSONA_FISICA_JURIDICA
+        ),
+      registration_year =
+        lubridate::year(
+          as.Date(
+            .data$FEC_MATRICULA
+          )
+        )
     ) |>
-        dplyr::select(
+    dplyr::select(
       -dplyr::any_of(
         c(
           "source_name",
@@ -477,7 +525,6 @@ prepare_territorial_data <- function(
       )
     )
 }
-
 
 # Identify unmatched municipality names ---------------------------------------
 
@@ -489,14 +536,14 @@ identify_unmatched_municipalities <- function(
   map_names <- municipal_boundaries |>
     sf::st_drop_geometry() |>
     dplyr::distinct(
-      .data$municipality_std
+      municipality_std
     )
 
   territorial_data |>
     dplyr::distinct(
-      .data$municipality_source,
-      .data$municipality_corrected,
-      .data$municipality_std
+      municipality_source,
+      municipality_corrected,
+      municipality_std
     ) |>
     dplyr::anti_join(
       map_names,
@@ -507,7 +554,6 @@ identify_unmatched_municipalities <- function(
     )
 }
 
-
 # Municipal ranking ------------------------------------------------------------
 
 summarise_municipal_ranking <- function(
@@ -516,8 +562,8 @@ summarise_municipal_ranking <- function(
 
   territorial_data |>
     dplyr::count(
-      .data$municipality_std,
-      .data$municipality_name,
+      municipality_std,
+      municipality_name,
       name = "registrations"
     ) |>
     dplyr::arrange(
@@ -760,7 +806,7 @@ summarise_top_municipality_evolution <- function(
       with_ties = FALSE
     ) |>
     dplyr::pull(
-      .data$municipality_std
+      "municipality_std"
     )
 
   territorial_data |>
@@ -792,8 +838,12 @@ create_municipal_registration_map <- function(
     dplyr::left_join(
       municipal_ranking |>
         dplyr::select(
-          .data$municipality_std,
-          .data$registrations
+          dplyr::all_of(
+            c(
+              "municipality_std",
+              "registrations"
+            )
+          )
         ),
       by = "municipality_std"
     ) |>
@@ -1096,9 +1146,19 @@ run_territorial_analysis <- function(
   )
 
   if (nrow(unmatched_municipalities) > 0L) {
+
+    unmatched_names <- paste(
+      unique(
+        unmatched_municipalities$municipality_source
+      ),
+      collapse = ", "
+    )
+
     warning(
       nrow(unmatched_municipalities),
-      " municipality name(s) could not be matched to the map.",
+      " municipality name(s) could not be matched to the map: ",
+      unmatched_names,
+      ".",
       call. = FALSE
     )
   }
