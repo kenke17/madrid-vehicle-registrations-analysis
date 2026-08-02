@@ -1,0 +1,41 @@
+Package: madridvehicleregistrations
+Type: Project
+Title: Madrid Passenger Car Registrations Analysis
+Version: 1.0.0
+Authors@R:
+    person(
+        given = "Miguel",
+        family = "Moscardó",
+        role = c("aut", "cre")
+    )
+Description: Reproducible analysis of passenger car registrations in the
+    Community of Madrid between January 2015 and December 2025. The project
+    includes fixed-width data ingestion, cleaning, descriptive and territorial
+    analysis, Factor Analysis of Mixed Data, K-means clustering and monthly
+    time-series analysis.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Depends:
+    R (>= 4.1.0)
+Imports:
+    cluster,
+    dplyr,
+    factoextra,
+    FactoMineR,
+    flextable,
+    forecast,
+    ggplot2,
+    here,
+    knitr,
+    lubridate,
+    officer,
+    patchwork,
+    purrr,
+    readr,
+    scales,
+    sf,
+    stringi,
+    stringr,
+    tibble,
+    tidyr,
+    zoo
