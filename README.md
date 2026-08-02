@@ -148,17 +148,84 @@ The monthly series shows:
 ## Repository structure
 
 ```text
-.
-├── R/                    # Clean and reusable R scripts
+madrid-vehicle-registrations-analysis/
+├── R/
+│   ├── 00_configuration.R
+│   ├── 01_import_fixed_width_data.R
+│   ├── 02_clean_and_filter_data.R
+│   ├── 03_descriptive_analysis.R
+│   ├── 04_territorial_analysis.R
+│   ├── 05_famd_analysis.R
+│   ├── 06_cluster_analysis.R
+│   ├── 07_time_series_analysis.R
+│   └── 99_run_project.R
 ├── data/
-│   ├── raw/              # Original DGT files, excluded from Git
-│   ├── sample/           # Reduced reproducible samples
-│   └── processed/        # Small aggregated outputs
-├── docs/                 # Project documentation
-├── figures/              # Publication-ready visualisations
-├── notebooks/            # Quarto analytical documents
-└── reports/              # Final report and executive summary
+│   ├── raw/
+│   ├── processed/
+│   ├── sample/
+│   └── external/
+├── docs/
+├── figures/
+├── notebooks/
+└── reports/
 ```
+
+## Running the project
+
+The analytical workflow is controlled through:
+
+```r
+source("R/99_run_project.R")
+```
+
+Calling the project runner without specifying a stage is safe:
+
+```r
+run_project()
+```
+
+This only displays the execution plan and does not run any analysis.
+
+A single analytical stage can be executed with:
+
+```r
+run_project(
+  stages = "descriptive"
+)
+```
+
+Available stages are:
+
+```text
+descriptive
+territorial
+famd
+cluster
+time_series
+```
+
+FAMD and clustering can be executed sequentially with:
+
+```r
+run_project(
+  stages = c(
+    "famd",
+    "cluster"
+  )
+)
+```
+
+All analytical stages can be requested with:
+
+```r
+run_project(
+  stages = "all"
+)
+```
+
+The complete workflow requires the processed master dataset in the local
+`data/processed/` directory. This dataset is not included in the repository.
+
 
 ## Documentation
 
@@ -184,15 +251,28 @@ These documents are currently being revised to match the final version of the Ba
 
 ## Reproducibility
 
-The original project code is being reorganised into clean, documented and reproducible scripts.
+The public repository is organised into documented and reusable scripts.
 
-The public version will:
+The project:
 
-- Use relative paths.
-- Keep raw data outside version control.
-- Separate data preparation from statistical analysis.
-- Include the package dependencies required for execution.
-- Provide aggregated outputs or reduced samples where redistribution is appropriate.
+- Uses relative paths throughout the analytical workflow.
+- Keeps raw and processed large datasets outside version control.
+- Separates data preparation from statistical analysis.
+- Centralises paths, parameters and dependencies in `R/00_configuration.R`.
+- Uses fixed random seeds for reproducible cluster solutions.
+- Provides a safe execution controller in `R/99_run_project.R`.
+- Stores generated analytical outputs locally.
+
+The main reference values are:
+
+- Analysis period: January 2015 to December 2025.
+- Number of monthly observations: 132.
+- Final master dataset: 3,115,063 registrations.
+- FAMD analytical sample: 3,041,569 complete observations.
+- Final cluster solution: five clusters.
+
+Results may still vary slightly depending on the installed R version, package
+versions and numerical libraries.
 
 ## Limitations
 
