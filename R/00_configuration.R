@@ -218,6 +218,11 @@ hybrid_vehicle_categories <- c(
 
 famd_number_of_components <- 8L
 
+expected_famd_observations <- 3041569L
+
+famd_cluster_input_filename <- "famd_for_clustering.rds"
+famd_full_model_filename <- "famd_full_model.rds"
+
 famd_minimum_power_kw <- 10
 famd_minimum_wheelbase_mm <- 1000
 famd_maximum_wheelbase_mm <- 6000
