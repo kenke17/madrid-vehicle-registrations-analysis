@@ -145,6 +145,56 @@ The monthly series shows:
 - Lower registration activity in August.
 - Higher activity in months such as December, June, July and November.
 
+## Selected visual results
+
+The following figures are generated reproducibly from the aggregated public
+results stored in [`data/public/`](data/public/). They do not require access to
+the original DGT microdata.
+
+### Registration evolution
+
+![Annual passenger car registrations in the Community of Madrid](figures/annual_registrations.png)
+
+The annual series shows the interruption associated with 2020 and the subsequent
+recovery of passenger car registrations.
+
+![Monthly passenger car registrations in the Community of Madrid](figures/monthly_registrations.png)
+
+The monthly series reveals the short-term disruption, the recovery path and the
+recurring seasonal pattern across the 2015–2025 period.
+
+### Propulsion transition
+
+![Evolution of propulsion technologies](figures/propulsion_evolution.png)
+
+The propulsion mix changes substantially over the study period, with a decline
+in conventional diesel registrations and increasing relevance of hybrid and
+electric technologies.
+
+### Territorial concentration
+
+![Municipal registration ranking](figures/municipal_ranking.png)
+
+Registrations are highly concentrated in a limited number of municipalities,
+including locations associated with corporate fleets, renting activity and
+atypical registration patterns.
+
+### Multivariate structure
+
+![FAMD explained inertia](figures/famd_inertia.png)
+
+The first three FAMD dimensions explain approximately 64.8% of the total
+inertia and are used as input for the final K-means solution.
+
+![Final cluster profiles](figures/cluster_profiles.png)
+
+The five-cluster solution distinguishes hybrid business-oriented vehicles,
+company and renting vehicles, higher-power vehicles, privately owned
+conventional vehicles and electric vehicles.
+
+All reproducible public figures are available in the
+[`figures/`](figures/) directory.
+
 ## Repository structure
 
 ```text
