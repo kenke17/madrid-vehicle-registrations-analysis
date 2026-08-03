@@ -942,12 +942,16 @@ save_cluster_results <- function(
   )
 
   cluster_assignments <- clustered_data |>
-    dplyr::select(
-      .data$id,
-      .data$periodo,
-      .data$cluster,
-      .data$cluster_label
+  dplyr::select(
+    dplyr::all_of(
+      c(
+        "id",
+        "periodo",
+        "cluster",
+        "cluster_label"
+      )
     )
+  )
 
   saveRDS(
     cluster_assignments,
