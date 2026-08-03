@@ -128,6 +128,11 @@ municipal_shapefile_path <- file.path(
   municipal_shapefile_filename
 )
 
+path_data_public <- here::here(
+  "data",
+  "public"
+)
+
 # Create output directories if necessary --------------------------------------
 
 output_directories <- c(
@@ -136,7 +141,8 @@ output_directories <- c(
   path_data_external,
   path_geospatial,
   path_figures,
-  path_reports
+  path_reports,
+  path_data_public
 )
 
 invisible(
