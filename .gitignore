@@ -66,6 +66,7 @@ data/raw/
 *.csv
 !data/sample/*.csv
 !data/processed/*.csv
+!data/public/*.csv
 
 # ==========================================
 # Archivos locales y credenciales
