@@ -658,10 +658,12 @@ summarise_top_famd_contributions <- function(
 
       contributions |>
         dplyr::select(
-          .data$variable,
-          contribution =
             dplyr::all_of(
-              dimension_column
+                c(
+                    "variable",
+                    dimension_column
+                )
+             
             )
         ) |>
         dplyr::slice_max(
@@ -926,7 +928,7 @@ run_famd_analysis <- function(
 
   retention_rate <- 100 *
     nrow(complete_data) /
-    nrow(prepared_data)
+    nrow(data)
 
   message(
     "FAMD complete observations: ",
