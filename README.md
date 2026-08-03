@@ -283,7 +283,8 @@ The complete workflow requires the processed master dataset in the local
 - [Methodology](docs/methodology.md)
 - [Data dictionary](docs/data_dictionary.md)
 - [Results](docs/results.md)
-- [Data documentation](data/README.md)
+- [Data documentation](data/README.md)´
+- [Executive summary](reports/executive_summary.md)
 
 These documents are currently being revised to match the final version of the Bachelor's Thesis.
 
